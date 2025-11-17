@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Mother's Necessity Finder</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            min-height: 100vh;
+        }
+        .card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 10px -5px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .link-button {
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .link-button:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10 p-6 bg-white rounded-xl shadow-lg">
+            <h1 class="text-4xl font-extrabold text-pink-600 mb-2">Mom & Baby Essentials Finder</h1>
+            <p class="text-gray-500">Select an item, and find instant retail links!</p>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="bg-white p-6 rounded-xl card mb-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">1. Select a Necessity</h2>
+
+            <div id="necessity-container" class="space-y-4">
+                <!-- Necessity Category Dropdowns will be inserted here by JavaScript -->
+            </div>
+
+            <div class="mt-6 pt-4 border-t">
+                <button id="search-button"
+                        class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                        onclick="generateLinks()">
+                    Find Selected Items Online
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Area -->
+        <div id="results-area" class="bg-white p-6 rounded-xl card hidden">
+            <h2 id="results-title" class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">2. Search Results</h2>
+            <div id="results-container" class="space-y-4">
+                <!-- Links will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data structure containing necessity categories, items, and suggested search terms/solutions.
+        const necessities = {
+            "Mom's Comfort & Recovery": {
+                "Postpartum Pain Relief": "Sitz bath soak, perineal cold packs",
+                "Sleep Support": "Nursing pillow, blackout eye mask",
+                "Hydration & Nutrition": "Large water bottle with straw, lactation snacks",
+            },
+            "Baby Feeding & Supplies": {
+                "Breastfeeding Essentials": "Nipple cream, nursing pads, breast pump supplies",
+                "Bottle Feeding Needs": "Sterilizer, bottle drying rack, specialized formula container",
+                "Burping & Spitting Up": "Muslin burp cloths, sensitive skin laundry detergent",
+            },
+            "Baby Diapering & Health": {
+                "Diapering Station Setup": "Diaper caddy, diaper pail, sensitive wipes",
+                "Skin Care": "Diaper rash cream, baby lotion for eczema",
+                "First Aid & Health": "Nose Frida, infant thermometer, gas relief drops",
+            },
+        };
+
+        function populateNecessities() {
+            const container = document.getElementById('necessity-container');
+            container.innerHTML = '';
+
+            for (const category in necessities) {
+                // Create the select wrapper for the category
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex flex-col sm:flex-row sm:items-center gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200';
+
+                // Category label
+                const label = document.createElement('label');
+                label.className = 'font-medium text-gray-600 sm:w-1/3';
+                label.textContent = category + ':';
+                wrapper.appendChild(label);
+
+                // Select element
+                const select = document.createElement('select');
+                // Simple ID creation for retrieval later
+                select.id = category.replace(/[^a-zA-Z0-9]/g, ''); 
+                select.className = 'flex-grow p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500 bg-white';
+
+                // Default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '— Select an item (optional) —';
+                select.appendChild(defaultOption);
+
+                // Item options
+                for (const item in necessities[category]) {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    option.textContent = item;
+                    select.appendChild(option);
+                }
+
+                wrapper.appendChild(select);
+                container.appendChild(wrapper);
+            }
+        }
+
+        function generateLinks() {
+            const resultsArea = document.getElementById('results-area');
+            const resultsContainer = document.getElementById('results-container');
+            const resultsTitle = document.getElementById('results-title');
+            resultsContainer.innerHTML = '';
+            const selectedItems = [];
+
+            // Loop through all categories to find selections
+            for (const category in necessities) {
+                const id = category.replace(/[^a-zA-Z0-9]/g, '');
+                const selectElement = document.getElementById(id);
+                if (selectElement && selectElement.value) {
+                    selectedItems.push(selectElement.value);
+                }
+            }
+
+            if (selectedItems.length === 0) {
+                resultsTitle.textContent = '2. Search Results: No Items Selected';
+                resultsContainer.innerHTML = '<p class="text-gray-500">Please select at least one necessity item above to find suggestions.</p>';
+                resultsArea.classList.remove('hidden');
+                return;
+            }
+
+            resultsTitle.textContent = `2. Search Results for ${selectedItems.length} Item(s):`;
+            
+            selectedItems.forEach(item => {
+                // Find the specific search suggestion for the item
+                let specificSuggestion = '';
+                for (const category in necessities) {
+                    if (necessities[category][item]) {
+                        specificSuggestion = necessities[category][item];
+                        break;
+                    }
+                }
+
+                // --- Create Result Card ---
+                const card = document.createElement('div');
+                card.className = 'bg-pink-50 p-4 rounded-lg border-2 border-pink-200 mb-4';
+
+                // Title
+                const title = document.createElement('h3');
+                title.className = 'text-xl font-semibold text-pink-700 mb-2 border-b border-pink-300 pb-1';
+                title.textContent = item;
+                card.appendChild(title);
+
+                // Suggestion Text
+                const suggestionP = document.createElement('p');
+                suggestionP.className = 'text-gray-600 mb-3 text-sm';
+                suggestionP.innerHTML = `**Suggested Gift/Solution:** ${specificSuggestion ? specificSuggestion : item}. This item helps new mothers with their comfort and convenience.`;
+                card.appendChild(suggestionP);
+
+                // Link Container
+                const linkContainer = document.createElement('div');
+                linkContainer.className = 'flex flex-col sm:flex-row gap-3 mt-4';
+
+                // Helper function to create a link button
+                const createLinkButton = (text, url) => {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.target = '_blank';
+                    link.className = 'link-button flex-1 text-center bg-indigo-500 text-white font-medium py-2 px-3 rounded-lg shadow-md hover:bg-indigo-600 text-sm';
+                    link.textContent = text;
+                    return link;
+                };
+
+                // Standardized Search Query (using the specific suggestion for better results)
+                const searchQuery = specificSuggestion || item;
+                const googleSearchUrl = `https://www.google.com/search?q=buy+${encodeURIComponent(searchQuery)}+for+new+mom+gift`;
+                const amazonSearchUrl = `https://www.amazon.com/s?k=${encodeURIComponent(searchQuery)}+new+mom`;
+
+                linkContainer.appendChild(createLinkButton('🎁 Find on Google Shopping (Gift Ideas)', googleSearchUrl));
+                linkContainer.appendChild(createLinkButton('🛍️ Check Prices on Amazon', amazonSearchUrl));
+
+                card.appendChild(linkContainer);
+                resultsContainer.appendChild(card);
+            });
+
+            resultsArea.classList.remove('hidden');
+            // Scroll to results
+            resultsArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize the dropdowns when the window loads
+        window.onload = populateNecessities;
+    </script>
+</body>
+</html>
